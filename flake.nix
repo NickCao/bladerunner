@@ -5,8 +5,21 @@
   outputs = { self, nixpkgs, ... }: {
     hydraJobs = rec {
       inherit (self.nixosConfigurations.netboot.config.system.build) netboot rootblk;
-      quickstart = with self.nixosConfigurations.netboot.pkgs; writeShellScriptBin "quickstart" ''
-        ${nbd}/bin/nbd-server 127.0.0.1:9999 ${rootblk} --read-only --nodaemon
+      nbd-server = with self.nixosConfigurations.netboot.pkgs; writeShellScriptBin "nbd-server" ''
+        ${nbd}/bin/nbd-server --nodaemon -C ${writeText "config" ''
+          [generic]
+          listenaddr = 127.0.0.1
+          port = 10809
+          max_threads = 12
+
+          [rostore]
+          exportname = ${rootblk}
+
+          [scratch]
+          exportname = /tmp/%s.img
+          temporary = true
+          filesize = 1073741824
+        ''}
       '';
     };
     nixosConfigurations.netboot = nixpkgs.lib.nixosSystem {
@@ -55,7 +68,7 @@
               serviceConfig = {
                 Type = "oneshot";
                 RemainAfterExit = true;
-                ExecStart = "${pkgs.nbd}/bin/nbd-client 10.0.2.2 9999 /dev/nbd0";
+                ExecStart = "${pkgs.nbd}/bin/nbd-client 10.0.2.2 /dev/nbd0 -name rostore";
               };
             };
 
