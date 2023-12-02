@@ -46,6 +46,8 @@
             boot.initrd.systemd.services.nbd-client = {
               requires = [ "network-online.target" ];
               after = [ "network-online.target" ];
+              wantedBy = [ "sysroot-mnt-store.mount" ];
+              before = [ "sysroot-mnt-store.mount" ];
               unitConfig = {
                 IgnoreOnIsolate = true;
                 DefaultDependencies = false;
@@ -58,10 +60,15 @@
             };
 
             boot.initrd.systemd.services.mkdir-rw-store = {
+              wantedBy = [ "sysroot-nix-store.mount" ];
+              before = [ "sysroot-nix-store.mount" ];
               unitConfig = {
                 IgnoreOnIsolate = true;
                 DefaultDependencies = false;
-                RequiresMountsFor = [ "/sysroot/${scratch}" ];
+                RequiresMountsFor = [
+                  "/sysroot/${scratch}"
+                  "/sysroot/${rostore}"
+                ];
               };
               serviceConfig = {
                 Type = "oneshot";
@@ -97,10 +104,7 @@
             fileSystems."${rostore}" = {
               fsType = "squashfs";
               device = "/dev/nbd0";
-              options = [
-                "_netdev"
-                "x-systemd.requires=nbd-client.service"
-              ];
+              options = [ "_netdev" ];
               neededForBoot = true;
             };
 
@@ -111,8 +115,6 @@
                 "lowerdir=/sysroot/${rostore}"
                 "upperdir=/sysroot/${scratch}/upperdir"
                 "workdir=/sysroot/${scratch}/workdir"
-                "x-systemd.requires-mounts-for=/sysroot/${rostore}"
-                "x-systemd.requires=mkdir-rw-store.service"
               ];
             };
 
