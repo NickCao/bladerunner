@@ -136,6 +136,14 @@
               ];
             };
 
+            services.github-runners.default = {
+              enable = true;
+              url = "https://github.com/NickCao/bladerunner";
+              tokenFile = builtins.toFile "token" "github_pat_something";
+              name = "test";
+              ephemeral = true;
+            };
+
             system.stateVersion = "23.11";
 
           })
