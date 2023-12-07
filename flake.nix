@@ -1,10 +1,17 @@
 {
   inputs = {
+    # required for the proper operation of nbd-client
     nixpkgs.url = "github:NickCao/nixpkgs";
   };
   outputs = { self, nixpkgs, ... }: {
     hydraJobs = rec {
+      # nix build .#hydraJobs.netboot
+      # creates a tftp root directory for ipxe boot
+      # chain netboot.ipxe from ipxe
       inherit (self.nixosConfigurations.netboot.config.system.build) netboot rootblk;
+      # nix run .#hydraJobs.nbd-server
+      # exports a readonly nix store and a ephemeral scratch disk
+      # FIXME: change listenaddr and port
       nbd-server = with self.nixosConfigurations.netboot.pkgs; writeShellScriptBin "nbd-server" ''
         ${nbd}/bin/nbd-server --nodaemon -C ${writeText "config" ''
           [generic]
