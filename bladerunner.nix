@@ -118,6 +118,7 @@ in
 
   system.build.ipxeScript = pkgs.writeText "netboot.ipxe" ''
     #!ipxe
+    dhcp
     kernel ${kernelTarget} init=${build.toplevel}/init initrd=initrd ${toString config.boot.kernelParams}
     initrd initrd
     boot
