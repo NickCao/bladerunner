@@ -15,7 +15,7 @@
       nbd-server = with self.nixosConfigurations.netboot.pkgs; writeShellScriptBin "nbd-server" ''
         ${nbd}/bin/nbd-server --nodaemon -C ${writeText "config" ''
           [generic]
-          listenaddr = 127.0.0.1
+          listenaddr = 0.0.0.0
           port = 10809
           max_threads = 12
 

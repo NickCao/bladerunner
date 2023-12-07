@@ -19,13 +19,13 @@ in
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   boot.kernelParams = [
-    # FIXME: maybe some other consoles
-    "console=ttyS0"
+    # FIXME: Use netconsole
   ];
 
   boot.initrd.systemd.enable = true;
   boot.initrd.network.enable = true;
-  boot.initrd.kernelModules = [ "nbd" "overlay" ];
+  boot.initrd.kernelModules = [ "nbd" "overlay" "r8169" "mt7921e" ];
+  hardware.enableRedistributableFirmware = true;
 
   boot.initrd.systemd.storePaths = [ pkgs.nbd ];
   boot.initrd.systemd.emergencyAccess = true;
@@ -46,7 +46,7 @@ in
       Type = "oneshot";
       RemainAfterExit = true;
       # FIXME: replace 10.0.2.2:10809 and rostore with actual nbd server address and block name
-      ExecStart = "${pkgs.nbd}/bin/nbd-client 10.0.2.2:10809 /dev/nbd0 -name rostore";
+      ExecStart = "${pkgs.nbd}/bin/nbd-client 172.24.5.1 10809 /dev/nbd0 -name rostore";
     };
   };
 
