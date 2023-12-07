@@ -8,6 +8,9 @@ in
 {
   imports = [
     (modulesPath + "/profiles/minimal.nix")
+    # FIXME: replace qemu quest profile with actual kernel modules required for initrd networking
+    # boot.initrd.availableKernelModules = [ ];
+    # boot.initrd.kernelModules = [ ];
     (modulesPath + "/profiles/qemu-guest.nix")
   ];
 
@@ -16,6 +19,7 @@ in
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   boot.kernelParams = [
+    # FIXME: maybe some other consoles
     "console=ttyS0"
   ];
 
@@ -41,7 +45,8 @@ in
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStart = "${pkgs.nbd}/bin/nbd-client 10.0.2.2 /dev/nbd0 -name rostore";
+      # FIXME: replace 10.0.2.2:10809 and rostore with actual nbd server address and block name
+      ExecStart = "${pkgs.nbd}/bin/nbd-client 10.0.2.2:10809 /dev/nbd0 -name rostore";
     };
   };
 
@@ -72,6 +77,7 @@ in
   networking.useNetworkd = true;
 
   system.build.rootblk = pkgs.callPackage (modulesPath + "/../lib/make-squashfs.nix") {
+    # FIXME: before prod, drop this line to use the default compression algo xz
     comp = "zstd -Xcompression-level 6";
     storeContents = [ build.toplevel ];
   };
@@ -81,6 +87,8 @@ in
     options = [ "defaults" "mode=755" ];
   };
 
+  # TODO: replace tmpfs with another ephemeral nbd block
+  # set fsType and autoFormat for auto format
   fileSystems."${scratch}" = {
     fsType = "tmpfs";
     options = [ "defaults" "mode=755" ];
@@ -124,8 +132,10 @@ in
 
   services.github-runners.default = {
     enable = true;
+    # FIXME: use actual repo url and github token
     url = "https://github.com/NickCao/bladerunner";
     tokenFile = builtins.toFile "token" "github_pat_something";
+    # FIXME: figure out how to set unique name for each runner
     name = "test";
     ephemeral = true;
   };
