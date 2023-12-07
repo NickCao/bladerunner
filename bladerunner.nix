@@ -33,7 +33,7 @@ in
   boot.initrd.systemd.targets.network-online.requiredBy = [ "initrd.target" ];
   boot.initrd.systemd.services.systemd-networkd-wait-online.requiredBy = [ "network-online.target" ];
 
-  boot.initrd.systemd.services.nbd-client = {
+  boot.initrd.systemd.services.nbd0 = {
     requires = [ "network-online.target" ];
     after = [ "network-online.target" ];
     wantedBy = [ "sysroot-mnt-store.mount" ];
@@ -45,8 +45,23 @@ in
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      # FIXME: replace 10.0.2.2:10809 and rostore with actual nbd server address and block name
       ExecStart = "${pkgs.nbd}/bin/nbd-client 172.24.5.1 10809 /dev/nbd0 -name rostore";
+    };
+  };
+
+  boot.initrd.systemd.services.nbd1 = {
+    requires = [ "network-online.target" ];
+    after = [ "network-online.target" ];
+    wantedBy = [ "sysroot.mount" ];
+    before = [ "sysroot.mount" ];
+    unitConfig = {
+      IgnoreOnIsolate = true;
+      DefaultDependencies = false;
+    };
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = "${pkgs.nbd}/bin/nbd-client 172.24.5.1 10809 /dev/nbd1 -name scratch";
     };
   };
 
