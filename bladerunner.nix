@@ -102,11 +102,11 @@ in
     options = [ "defaults" "mode=755" ];
   };
 
-  # TODO: replace tmpfs with another ephemeral nbd block
-  # set fsType and autoFormat for auto format
   fileSystems."${scratch}" = {
-    fsType = "tmpfs";
-    options = [ "defaults" "mode=755" ];
+    fsType = "ext4";
+    device = "/dev/nbd1";
+    options = [ "_netdev" ];
+    autoFormat = true;
     neededForBoot = true;
   };
 
