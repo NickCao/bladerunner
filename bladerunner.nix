@@ -148,7 +148,7 @@ in
     ];
   };
 
-  services.github-runners.default = {
+  services.github-runners.sequencer = {
     enable = true;
     # FIXME: use actual repo url and github token
     url = "https://github.com/NickCao/bladerunner";

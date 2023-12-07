@@ -1,7 +1,7 @@
 {
   inputs = {
-    # required for the proper operation of nbd-client
-    nixpkgs.url = "github:NickCao/nixpkgs";
+    # required for the proper operation of nbd-client and nixos/github-runner
+    nixpkgs.url = "github:NickCao/nixpkgs/bladerunner";
   };
   outputs = { self, nixpkgs, ... }: {
     hydraJobs = rec {
