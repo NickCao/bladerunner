@@ -43,6 +43,11 @@ in
       boot.initrd.systemd.targets.network-online.requiredBy = [ "initrd.target" ];
       boot.initrd.systemd.services.systemd-networkd-wait-online.requiredBy = [ "network-online.target" ];
 
+      boot.initrd.systemd.contents."/etc/nbdtab".text = ''
+        nbd0 172.24.5.1 rostore port=10809
+        nbd1 172.24.5.1 scratch port=10809
+      '';
+
       boot.initrd.systemd.services.nbd0 = {
         requires = [ "network-online.target" ];
         after = [ "network-online.target" ];
@@ -55,7 +60,7 @@ in
         serviceConfig = {
           Type = "oneshot";
           RemainAfterExit = true;
-          ExecStart = "${pkgs.nbd}/bin/nbd-client 172.24.5.1 10809 /dev/nbd0 -name rostore";
+          ExecStart = "${pkgs.nbd}/bin/nbd-client /dev/nbd0";
         };
       };
 
@@ -71,7 +76,7 @@ in
         serviceConfig = {
           Type = "oneshot";
           RemainAfterExit = true;
-          ExecStart = "${pkgs.nbd}/bin/nbd-client 172.24.5.1 10809 /dev/nbd1 -name scratch";
+          ExecStart = "${pkgs.nbd}/bin/nbd-client /dev/nbd1";
         };
       };
 
