@@ -6,8 +6,8 @@
   outputs = { self, nixpkgs, ... }: {
     hydraJobs = rec {
       # nix build .#hydraJobs.netboot
-      # creates a tftp root directory for ipxe boot
-      # chain netboot.ipxe from ipxe
+      # creates a tftp root directory for pxe boot
+      # chain ipxe.efi from pxe
       inherit (self.nixosConfigurations.netboot.config.system.build) netboot rootblk;
       # nix run .#hydraJobs.nbd-server
       # exports a readonly nix store and a ephemeral scratch disk
