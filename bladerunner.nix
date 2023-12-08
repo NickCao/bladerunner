@@ -2,8 +2,10 @@
 let
   build = config.system.build;
   kernelTarget = pkgs.stdenv.hostPlatform.linux-kernel.target;
-  scratch = "/mnt/scratch";
   rostore = "/mnt/store";
+  scratch = "/mnt/scratch";
+  rostoreDev = "nbd0";
+  scratchDev = "nbd1";
   cfg = config.bladerunner;
 in
 {
@@ -51,8 +53,8 @@ in
         services.systemd-networkd-wait-online.requiredBy = [ "network-online.target" ];
 
         contents."/etc/nbdtab".text = ''
-          nbd0 ${cfg.addr} rostore port=${toString cfg.port}
-          nbd1 ${cfg.addr} scratch port=${toString cfg.port}
+          ${rostoreDev} ${cfg.addr} rostore port=${toString cfg.port}
+          ${scratchDev} ${cfg.addr} scratch port=${toString cfg.port}
         '';
 
         services."nbd@" = {
@@ -115,16 +117,16 @@ in
 
     fileSystems."${scratch}" = {
       fsType = "ext4";
-      device = "/dev/nbd1";
-      options = [ "_netdev" "x-systemd.requires=nbd@nbd1.service" ];
+      device = "/dev/${scratchDev}";
+      options = [ "_netdev" "x-systemd.requires=nbd@${scratchDev}.service" ];
       autoFormat = true;
       neededForBoot = true;
     };
 
     fileSystems."${rostore}" = {
       fsType = "squashfs";
-      device = "/dev/nbd0";
-      options = [ "_netdev" "x-systemd.requires=nbd@nbd0.service" ];
+      device = "/dev/${rostoreDev}";
+      options = [ "_netdev" "x-systemd.requires=nbd@${rostoreDev}.service" ];
       neededForBoot = true;
     };
 
