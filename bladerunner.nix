@@ -64,16 +64,6 @@ in
         };
       };
 
-      boot.initrd.systemd.services."nbd@nbd0" = {
-        requiredBy = [ "dev-nbd0.device" ];
-        overrideStrategy = "asDropin";
-      };
-
-      boot.initrd.systemd.services."nbd@nbd1" = {
-        requiredBy = [ "dev-nbd1.device" ];
-        overrideStrategy = "asDropin";
-      };
-
       boot.initrd.systemd.services.mkdir-rw-store = {
         wantedBy = [ "sysroot-nix-store.mount" ];
         before = [ "sysroot-nix-store.mount" ];
@@ -114,7 +104,7 @@ in
       fileSystems."${scratch}" = {
         fsType = "ext4";
         device = "/dev/nbd1";
-        options = [ "_netdev" ];
+        options = [ "_netdev" "x-systemd.requires=nbd@nbd1.service" ];
         autoFormat = true;
         neededForBoot = true;
       };
@@ -122,7 +112,7 @@ in
       fileSystems."${rostore}" = {
         fsType = "squashfs";
         device = "/dev/nbd0";
-        options = [ "_netdev" ];
+        options = [ "_netdev" "x-systemd.requires=nbd@nbd0.service" ];
         neededForBoot = true;
       };
 
