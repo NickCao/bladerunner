@@ -144,37 +144,22 @@ in
       ${config.nix.package}/bin/nix-store --load-db < /nix/store/nix-path-registration
     '';
 
-    system.build.ipxeScript = pkgs.writeText "netboot.ipxe" ''
-      #!ipxe
-      kernel ${kernelTarget} init=${build.toplevel}/init initrd=initrd ${toString config.boot.kernelParams}
-      initrd initrd
-      boot
-    '';
+    system.build.ukiconf = (pkgs.formats.ini { }).generate "uki.conf" {
+      UKI = {
+        Linux = "${build.kernel}/${kernelTarget}";
+        Initrd = "${build.initialRamdisk}/initrd";
+        Cmdline = "init=${build.toplevel}/init ${toString config.boot.kernelParams}";
+        OSRelease = "@${config.environment.etc.os-release.source}";
+        EFIArch = "x64";
+        Stub = "${pkgs.systemd}/lib/systemd/boot/efi/linuxx64.efi.stub";
+      };
+    };
 
-    system.build.netboot = pkgs.linkFarm "netboot" [
-      {
-        name = kernelTarget;
-        path = "${build.kernel}/${kernelTarget}";
-      }
-      {
-        name = "initrd";
-        path = "${build.initialRamdisk}/initrd";
-      }
-      {
-        name = "netboot.ipxe";
-        path = build.ipxeScript;
-      }
-      {
-        name = "ipxe.efi";
-        path = "${pkgs.ipxe.override {
-          embedScript = pkgs.writeText "embed.ipxe" ''
-            #!ipxe
-            dhcp
-            chain netboot.ipxe
-          '';
-        }}/ipxe.efi";
-      }
-    ];
+    system.build.netboot = pkgs.runCommand "netboot" { } ''
+      mkdir -p "$out"
+      ${pkgs.systemdMinimal.override { withUkify = true; withEfi = true; withBootloader = true; }}/lib/systemd/ukify \
+        build --config ${build.ukiconf} --output "$out/netboot.efi"
+    '';
 
   };
 }
