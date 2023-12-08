@@ -33,7 +33,13 @@
       system = "x86_64-linux";
       modules = [
         ./bladerunner.nix
-        { bladerunner.enable = true; }
+        {
+          bladerunner = {
+            enable = true;
+            addr = "172.24.5.1";
+            port = 10809;
+          };
+        }
       ];
     };
   };
