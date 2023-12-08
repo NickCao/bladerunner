@@ -34,11 +34,24 @@
       modules = [
         ./bladerunner.nix
         {
+
           bladerunner = {
             enable = true;
             addr = "172.24.5.1";
             port = 10809;
           };
+
+          services.github-runners.sequencer = {
+            enable = true;
+            # FIXME: use actual repo url and github token
+            url = "https://github.com/NickCao/bladerunner";
+            tokenFile = builtins.toFile "token" "github_pat_something";
+            name = "sequencer";
+            ephemeral = true;
+          };
+
+          system.stateVersion = "23.11";
+
         }
       ];
     };

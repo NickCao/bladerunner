@@ -167,17 +167,5 @@ in
       ];
     };
 
-    services.github-runners.sequencer = {
-      enable = true;
-      # FIXME: use actual repo url and github token
-      url = "https://github.com/NickCao/bladerunner";
-      tokenFile = builtins.toFile "token" "github_pat_something";
-      name = "sequencer";
-      ephemeral = true;
-    };
-
-    system.stateVersion = "23.11";
-
   };
-
 }
