@@ -158,7 +158,7 @@ in
     system.build.netboot = pkgs.runCommand "netboot" { } ''
       mkdir -p "$out"
       ${pkgs.systemdMinimal.override { withUkify = true; withEfi = true; withBootloader = true; }}/lib/systemd/ukify \
-        build --config ${build.ukiconf} --output "$out/netboot.efi"
+        build --config ${build.ukiconf} --output "$out/ipxe.efi"
     '';
 
   };
