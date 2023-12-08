@@ -37,62 +37,69 @@ in
       # FIXME: Use netconsole
     ];
 
-    boot.initrd.systemd.enable = true;
-    boot.initrd.network.enable = true;
-    boot.initrd.kernelModules = [ "nbd" "overlay" "r8169" "mt7921e" ];
+    boot.initrd = {
+      kernelModules = [ "nbd" "overlay" "r8169" "mt7921e" ];
+
+      network.enable = true;
+
+      systemd = {
+        enable = true;
+        storePaths = [ pkgs.nbd ];
+        emergencyAccess = true;
+
+        targets.network-online.requiredBy = [ "initrd.target" ];
+        services.systemd-networkd-wait-online.requiredBy = [ "network-online.target" ];
+
+        contents."/etc/nbdtab".text = ''
+          nbd0 ${cfg.addr} rostore port=${toString cfg.port}
+          nbd1 ${cfg.addr} scratch port=${toString cfg.port}
+        '';
+
+        services."nbd@" = {
+          before = [ "dev-%i.device" ];
+          after = [ "network-online.target" ];
+          conflicts = [ "shutdown.target" ];
+          unitConfig = {
+            IgnoreOnIsolate = true;
+            DefaultDependencies = false;
+          };
+          serviceConfig = {
+            Type = "oneshot";
+            RemainAfterExit = true;
+            ExecStart = "${lib.getBin pkgs.nbd}/bin/nbd-client %i";
+            ExecStop = "${lib.getBin pkgs.nbd}/nbd-client -d /dev/%i";
+          };
+        };
+
+        services.mkdir-rw-store = {
+          wantedBy = [ "sysroot-nix-store.mount" ];
+          before = [ "sysroot-nix-store.mount" ];
+          unitConfig = {
+            IgnoreOnIsolate = true;
+            DefaultDependencies = false;
+            RequiresMountsFor = [
+              "/sysroot/${scratch}"
+              "/sysroot/${rostore}"
+            ];
+          };
+          serviceConfig = {
+            Type = "oneshot";
+            RemainAfterExit = true;
+            ExecStart = [
+              "${pkgs.coreutils}/bin/mkdir -p /sysroot/${scratch}/upperdir"
+              "${pkgs.coreutils}/bin/mkdir -p /sysroot/${scratch}/workdir"
+            ];
+          };
+        };
+      };
+    };
+
     hardware.enableRedistributableFirmware = true;
-
-    boot.initrd.systemd.storePaths = [ pkgs.nbd ];
-    boot.initrd.systemd.emergencyAccess = true;
-
-    boot.initrd.systemd.targets.network-online.requiredBy = [ "initrd.target" ];
-    boot.initrd.systemd.services.systemd-networkd-wait-online.requiredBy = [ "network-online.target" ];
-
-    boot.initrd.systemd.contents."/etc/nbdtab".text = ''
-      nbd0 ${cfg.addr} rostore port=${toString cfg.port}
-      nbd1 ${cfg.addr} scratch port=${toString cfg.port}
-    '';
-
-    boot.initrd.systemd.services."nbd@" = {
-      before = [ "dev-%i.device" ];
-      after = [ "network-online.target" ];
-      conflicts = [ "shutdown.target" ];
-      unitConfig = {
-        IgnoreOnIsolate = true;
-        DefaultDependencies = false;
-      };
-      serviceConfig = {
-        Type = "oneshot";
-        RemainAfterExit = true;
-        ExecStart = "${lib.getBin pkgs.nbd}/bin/nbd-client %i";
-        ExecStop = "${lib.getBin pkgs.nbd}/nbd-client -d /dev/%i";
-      };
-    };
-
-    boot.initrd.systemd.services.mkdir-rw-store = {
-      wantedBy = [ "sysroot-nix-store.mount" ];
-      before = [ "sysroot-nix-store.mount" ];
-      unitConfig = {
-        IgnoreOnIsolate = true;
-        DefaultDependencies = false;
-        RequiresMountsFor = [
-          "/sysroot/${scratch}"
-          "/sysroot/${rostore}"
-        ];
-      };
-      serviceConfig = {
-        Type = "oneshot";
-        RemainAfterExit = true;
-        ExecStart = [
-          "${pkgs.coreutils}/bin/mkdir -p /sysroot/${scratch}/upperdir"
-          "${pkgs.coreutils}/bin/mkdir -p /sysroot/${scratch}/workdir"
-        ];
-      };
-    };
 
     services.getty.autologinUser = "root";
 
     networking.firewall.enable = false;
+
     networking.useNetworkd = true;
 
     system.build.rootblk = pkgs.callPackage (modulesPath + "/../lib/make-squashfs.nix") {
