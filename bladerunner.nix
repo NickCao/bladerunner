@@ -141,9 +141,8 @@ in
         ${config.nix.package}/bin/nix-store --load-db < /nix/store/nix-path-registration
       '';
 
-      system.build.ipxeScript = pkgs.writeText "netboot.ipxe" ''
+      system.build.ipxeScript = pkgs.writeTextDir "netboot.ipxe" ''
         #!ipxe
-        dhcp
         kernel ${kernelTarget} init=${build.toplevel}/init initrd=initrd ${toString config.boot.kernelParams}
         initrd initrd
         boot
@@ -152,9 +151,16 @@ in
       system.build.netboot = pkgs.symlinkJoin {
         name = "netboot";
         paths = [
+          (pkgs.ipxe.override {
+            embedScript = pkgs.writeText "embed.ipxe" ''
+              #!ipxe
+              dhcp
+              chain netboot.ipxe
+            '';
+          })
           build.kernel
           build.initialRamdisk
-          (pkgs.ipxe.override { embedScript = build.ipxeScript; })
+          build.ipxeScript
         ];
       };
 
