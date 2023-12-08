@@ -31,7 +31,10 @@
     };
     nixosConfigurations.netboot = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
-      modules = [ ./bladerunner.nix ];
+      modules = [
+        ./bladerunner.nix
+        { bladerunner.enable = true; }
+      ];
     };
   };
 }
