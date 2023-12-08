@@ -48,11 +48,10 @@ in
         nbd1 172.24.5.1 scratch port=10809
       '';
 
-      boot.initrd.systemd.services.nbd0 = {
-        requires = [ "network-online.target" ];
+      boot.initrd.systemd.services."nbd@" = {
+        before = [ "dev-%i.device" ];
         after = [ "network-online.target" ];
-        wantedBy = [ "sysroot-mnt-store.mount" ];
-        before = [ "sysroot-mnt-store.mount" ];
+        conflicts = [ "shutdown.target" ];
         unitConfig = {
           IgnoreOnIsolate = true;
           DefaultDependencies = false;
@@ -60,24 +59,19 @@ in
         serviceConfig = {
           Type = "oneshot";
           RemainAfterExit = true;
-          ExecStart = "${pkgs.nbd}/bin/nbd-client /dev/nbd0";
+          ExecStart = "${lib.getBin pkgs.nbd}/bin/nbd-client %i";
+          ExecStop = "${lib.getBin pkgs.nbd}/nbd-client -d /dev/%i";
         };
       };
 
-      boot.initrd.systemd.services.nbd1 = {
-        requires = [ "network-online.target" ];
-        after = [ "network-online.target" ];
-        wantedBy = [ "sysroot.mount" ];
-        before = [ "sysroot.mount" ];
-        unitConfig = {
-          IgnoreOnIsolate = true;
-          DefaultDependencies = false;
-        };
-        serviceConfig = {
-          Type = "oneshot";
-          RemainAfterExit = true;
-          ExecStart = "${pkgs.nbd}/bin/nbd-client /dev/nbd1";
-        };
+      boot.initrd.systemd.services."nbd@nbd0" = {
+        requiredBy = [ "dev-nbd0.device" ];
+        overrideStrategy = "asDropin";
+      };
+
+      boot.initrd.systemd.services."nbd@nbd1" = {
+        requiredBy = [ "dev-nbd1.device" ];
+        overrideStrategy = "asDropin";
       };
 
       boot.initrd.systemd.services.mkdir-rw-store = {
