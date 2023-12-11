@@ -60,6 +60,7 @@ in
         services."nbd@" = {
           before = [ "dev-%i.device" ];
           after = [ "network-online.target" ];
+          requires = [ "network-online.target" ];
           conflicts = [ "shutdown.target" ];
           unitConfig = {
             IgnoreOnIsolate = true;
