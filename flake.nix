@@ -50,8 +50,12 @@
             ephemeral = true;
           };
 
-          system.stateVersion = "23.11";
+          services.openssh.enable = true;
 
+          users.users.root.openssh.authorizedKeys.keys = [
+          ];
+
+          system.stateVersion = "23.11";
         }
       ];
     };
