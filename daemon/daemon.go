@@ -1,110 +1,108 @@
 package main
 
 import (
-	"bytes"
 	"crypto/ed25519"
 	"crypto/rand"
 	"flag"
 	"golang.org/x/crypto/ssh"
-	"io"
 	"log"
+	"log/slog"
 	"net"
-	"sync"
+	"os/exec"
 )
 
 var addr = flag.String("l", "127.0.0.1:2022", "address to listen on")
-var path = flag.String("p", "", "path to socket")
 
 func main() {
 	flag.Parse()
 
-	_, priv, err := ed25519.GenerateKey(rand.Reader)
+	_, key, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	signer, err := ssh.NewSignerFromKey(priv)
+	signer, err := ssh.NewSignerFromKey(key)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var config = &ssh.ServerConfig{NoClientAuth: true}
+	var config = &ssh.ServerConfig{
+		NoClientAuth: true,
+	}
+
 	config.AddHostKey(signer)
 
-	lis, err := net.Listen("tcp", *addr)
+	listener, err := net.Listen("tcp", *addr)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	for {
-		conn, err := lis.Accept()
+		conn, err := listener.Accept()
 		if err != nil {
 			log.Println(err)
 			continue
 		}
-		go func() {
-			log.Println(handleConn(conn, config))
-		}()
+		go conn_handler(conn, config)
 	}
 }
 
-func handleConn(conn net.Conn, config *ssh.ServerConfig) error {
-	log.Println("new connection")
-	sconn, chrs, greqs, err := ssh.NewServerConn(conn, config)
+func conn_handler(conn net.Conn, config *ssh.ServerConfig) {
+	slog.Info("new conn", "remote", conn.RemoteAddr().String())
+
+	server, channel, requests, err := ssh.NewServerConn(conn, config)
 	if err != nil {
-		return err
+		slog.Error("new server conn error", "error", err)
+		return
 	}
-	defer sconn.Close()
+	defer server.Close()
 
-	wg := &sync.WaitGroup{}
-	go ssh.DiscardRequests(greqs)
-	for chr := range chrs {
-		wg.Add(1)
-		go handleChannelRequest(chr, wg)
+	go ssh.DiscardRequests(requests)
+
+	for chr := range channel {
+		go chan_handler(chr)
 	}
-	wg.Wait()
-
-	return nil
 }
 
-func handleChannelRequest(chr ssh.NewChannel, wg *sync.WaitGroup) error {
-	log.Println("new channel")
-	defer wg.Done()
+func chan_handler(chr ssh.NewChannel) {
+	slog.Info("new chan", "type", chr.ChannelType())
 
 	if chr.ChannelType() != "session" {
-		return chr.Reject(ssh.UnknownChannelType, "unknown channel type")
+		err := chr.Reject(ssh.UnknownChannelType, "unknown channel type")
+		slog.Error("new chan rejected", "error", err)
+		return
 	}
 
-	ch, reqs, err := chr.Accept()
+	channel, requests, err := chr.Accept()
 	if err != nil {
-		return err
+		slog.Error("new chan error", "error", err)
+		return
 	}
 
-	for req := range reqs {
-		if req.Type != "exec" {
-			if req.WantReply {
-				req.Reply(false, nil)
-			}
-			continue
-		}
-		if len(req.Payload) < 4 || !bytes.Equal(req.Payload[4:], []byte("nix-daemon --stdio")) {
-			if req.WantReply {
-				req.Reply(false, nil)
+	for request := range requests {
+		if request.Type != "exec" {
+			if request.WantReply {
+				request.Reply(false, nil)
 			}
 			continue
 		}
 
-		uconn, err := net.Dial("unix", *path)
-		if req.WantReply {
-			req.Reply(err == nil, nil)
-		}
+		var command = exec.Command("nix", "daemon", "--stdio", "--force-trusted")
+
+		command.Stdin = channel
+		command.Stdout = channel
+
+		err = command.Start()
 		if err != nil {
-			return err
+			slog.Error("daemon error", "error", err)
+			if request.WantReply {
+				request.Reply(false, nil)
+			}
+			return
 		}
 
-		go func() { io.Copy(uconn, ch) }()
-		go func() { io.Copy(ch, uconn) }()
+		if request.WantReply {
+			request.Reply(true, nil)
+		}
 	}
-
-	return nil
 }
