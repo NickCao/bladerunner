@@ -87,7 +87,7 @@ func chan_handler(chr ssh.NewChannel) {
 			continue
 		}
 
-		var command = exec.Command("nix", "daemon", "--stdio", "--force-trusted")
+		var command = exec.Command("/bin/nix", "daemon", "--stdio", "--force-trusted")
 
 		command.Stdin = channel
 		command.Stdout = channel
