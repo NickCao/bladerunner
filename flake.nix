@@ -37,8 +37,12 @@
 
           bladerunner = {
             enable = true;
-            addr = "172.24.5.1";
+            addr = "10.0.2.2";
             port = 10809;
+            store = {
+              type = "nfs";
+              device = "10.0.2.2:/nix";
+            };
           };
 
           services.github-runners.sequencer = {

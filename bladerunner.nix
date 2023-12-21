@@ -49,8 +49,23 @@ in
 
       systemd = {
         enable = true;
-        storePaths = [ pkgs.nbd ];
+        storePaths = [ pkgs.nbd pkgs.libtirpc ];
         emergencyAccess = true;
+
+        initrdBin = [
+          (pkgs.runCommand "nfs-utils-sbin" { } ''
+            mkdir -p "$out"
+            ln -s ${pkgs.nfs-utils}/bin "$out/sbin"
+          '')
+          pkgs.strace
+        ];
+
+        contents = {
+          "/etc/protocols".source = "${pkgs.iana-etc}/etc/protocols";
+          "/etc/services".source = "${pkgs.iana-etc}/etc/services";
+          "/etc/rpc".source = "${pkgs.glibc}/etc/rpc";
+          "/etc/nsswitch.conf".source = config.environment.etc."nsswitch.conf".source;
+        };
 
         targets.network-online.requiredBy = [ "initrd.target" ];
         services.systemd-networkd-wait-online.requiredBy = [ "network-online.target" ];
@@ -129,11 +144,11 @@ in
     fileSystems."${rostore}" = {
       fsType = cfg.store.type;
       device = cfg.store.device;
-      options = [ "_netdev" ];
+      options = [ "_netdev" "nolock" ];
       neededForBoot = true;
     };
 
-    fileSystems."/nix" = {
+    fileSystems."/nix/store" = {
       fsType = "overlay";
       device = "overlay";
       options = [
@@ -141,6 +156,7 @@ in
         "upperdir=/sysroot/${scratch}/upperdir"
         "workdir=/sysroot/${scratch}/workdir"
       ];
+      neededForBoot = true;
     };
 
     system.build.ukiconf = (pkgs.formats.ini { }).generate "uki.conf" {
