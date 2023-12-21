@@ -13,7 +13,6 @@ in
   imports = [
     (modulesPath + "/profiles/minimal.nix")
     # FIXME: replace qemu quest profile with actual kernel modules required for initrd networking
-    # boot.initrd.availableKernelModules = [ ];
     # boot.initrd.kernelModules = [ ];
     (modulesPath + "/profiles/qemu-guest.nix")
   ];
@@ -42,11 +41,21 @@ in
     boot.initrd = {
       kernelModules = [ "nbd" "overlay" "r8169" "mt7921e" ];
 
+      availableKernelModules = [ "nfsv4" ];
+
       network.enable = true;
 
       systemd = {
         enable = true;
+
         storePaths = [ pkgs.nbd ];
+        initrdBin = [
+          (pkgs.runCommand "nfs-utils-sbin" { } ''
+            mkdir -p "$out"
+            ln -s ${pkgs.nfs-utils}/bin "$out/sbin"
+          '')
+        ];
+
         emergencyAccess = true;
 
         targets.network-online.requiredBy = [ "initrd.target" ];
