@@ -4,11 +4,13 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"flag"
-	"golang.org/x/crypto/ssh"
 	"log"
 	"log/slog"
 	"net"
+	"os"
 	"os/exec"
+
+	"golang.org/x/crypto/ssh"
 )
 
 var addr = flag.String("l", "127.0.0.1:2022", "address to listen on")
@@ -87,10 +89,12 @@ func chan_handler(chr ssh.NewChannel) {
 			continue
 		}
 
-		var command = exec.Command("/bin/nix", "daemon", "--stdio", "--force-trusted")
+		var command = exec.Command("/bin/nix", "daemon",
+			"--stdio", "--extra-experimental-features", "nix-command daemon-trust-override", "--force-trusted")
 
 		command.Stdin = channel
 		command.Stdout = channel
+		command.Stderr = os.Stderr
 
 		err = command.Start()
 		if err != nil {
