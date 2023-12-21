@@ -4,7 +4,6 @@ let
   kernelTarget = pkgs.stdenv.hostPlatform.linux-kernel.target;
   rostore = "/mnt/store";
   scratch = "/mnt/scratch";
-  rostoreDev = "nbd0";
   scratchDev = "nbd1";
   cfg = config.bladerunner;
 in
@@ -26,6 +25,10 @@ in
     port = lib.mkOption {
       type = lib.types.port;
       default = 10809;
+    };
+    store = {
+      type = lib.mkOption { type = lib.types.str; };
+      device = lib.mkOption { type = lib.types.str; };
     };
   };
 
@@ -53,7 +56,6 @@ in
         services.systemd-networkd-wait-online.requiredBy = [ "network-online.target" ];
 
         contents."/etc/nbdtab".text = ''
-          ${rostoreDev} ${cfg.addr} rostore port=${toString cfg.port}
           ${scratchDev} ${cfg.addr} scratch port=${toString cfg.port}
         '';
 
@@ -125,13 +127,13 @@ in
     };
 
     fileSystems."${rostore}" = {
-      fsType = "squashfs";
-      device = "/dev/${rostoreDev}";
-      options = [ "_netdev" "x-systemd.requires=nbd@${rostoreDev}.service" ];
+      fsType = cfg.store.type;
+      device = cfg.store.device;
+      options = [ "_netdev" ];
       neededForBoot = true;
     };
 
-    fileSystems."/nix/store" = {
+    fileSystems."/nix" = {
       fsType = "overlay";
       device = "overlay";
       options = [
@@ -140,10 +142,6 @@ in
         "workdir=/sysroot/${scratch}/workdir"
       ];
     };
-
-    boot.postBootCommands = ''
-      ${config.nix.package}/bin/nix-store --load-db < /nix/store/nix-path-registration
-    '';
 
     system.build.ukiconf = (pkgs.formats.ini { }).generate "uki.conf" {
       UKI = {
