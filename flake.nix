@@ -39,6 +39,7 @@
         install -D ${pkgsStatic.multirun}/bin/multirun "$out/sbin/init"
         install -D ${pkgsStatic.nix}/bin/nix           "$out/bin/nix"
         install -D ${pkgsStatic.nbd}/bin/nbd-server    "$out/bin/nbd-server"
+        install -D ${daemon}/bin/daemon                "$out/bin/daemon"
       '';
     };
     nixosConfigurations.netboot = nixpkgs.lib.nixosSystem {
