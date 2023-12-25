@@ -28,6 +28,13 @@
           filesize = 1073741824
         ''}
       '';
+      daemon = with self.nixosConfigurations.netboot.pkgs; buildGoModule {
+        pname = "daemon";
+        version = self.sourceInfo.lastModifiedDate;
+        src = "${self}/daemon";
+        vendorHash = "sha256-Z4Cu+TaeH245rRJSafSR6ST/SNrXu9FKwSnw2fFuGEg=";
+        CGO_ENABLED = 0;
+      };
       nspawn = with self.nixosConfigurations.netboot.pkgs; runCommand "nspawn" { } ''
         install -D ${pkgsStatic.multirun}/bin/multirun "$out/sbin/init"
         install -D ${pkgsStatic.nix}/bin/nix           "$out/bin/nix"
