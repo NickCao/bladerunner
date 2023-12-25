@@ -28,6 +28,11 @@
           filesize = 1073741824
         ''}
       '';
+      nspawn = with self.nixosConfigurations.netboot.pkgs; runCommand "nspawn" { } ''
+        install -D ${pkgsStatic.multirun}/bin/multirun "$out/sbin/init"
+        install -D ${pkgsStatic.nix}/bin/nix           "$out/bin/nix"
+        install -D ${pkgsStatic.nbd}/bin/nbd-server    "$out/bin/nbd-server"
+      '';
     };
     nixosConfigurations.netboot = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
