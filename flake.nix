@@ -40,6 +40,7 @@
         install -D ${pkgsStatic.nix}/bin/nix           "$out/bin/nix"
         install -D ${pkgsStatic.nbd}/bin/nbd-server    "$out/bin/nbd-server"
         install -D ${daemon}/bin/daemon                "$out/bin/daemon"
+        install -D /dev/null                           "$out/etc/os-release"
       '';
     };
     nixosConfigurations.netboot = nixpkgs.lib.nixosSystem {
