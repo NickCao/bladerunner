@@ -19,9 +19,6 @@
           port = 10809
           max_threads = 12
 
-          [rostore]
-          exportname = ${rootblk}
-
           [scratch]
           exportname = /tmp/%s.img
           temporary = true
