@@ -150,7 +150,7 @@ in
     fileSystems."${rostore}" = {
       fsType = "nfs";
       device = "172.24.5.3:/var/storage/biyun/nixstore/nix";
-      options = [ ];
+      # options = [ ];
       neededForBoot = true;
     };
 
