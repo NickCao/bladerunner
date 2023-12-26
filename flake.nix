@@ -33,10 +33,8 @@
         CGO_ENABLED = 0;
       };
       nspawn = with self.nixosConfigurations.netboot.pkgs; runCommand "nspawn" { } ''
-        install -D ${pkgsStatic.multirun}/bin/multirun "$out/sbin/init"
+        install -D ${daemon}/bin/daemon                "$out/sbin/init"
         install -D ${pkgsStatic.nix}/bin/nix           "$out/bin/nix"
-        install -D ${pkgsStatic.nbd}/bin/nbd-server    "$out/bin/nbd-server"
-        install -D ${daemon}/bin/daemon                "$out/bin/daemon"
         install -D /dev/null                           "$out/etc/os-release"
       '';
     };
