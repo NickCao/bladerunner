@@ -47,7 +47,7 @@ in
       systemd = {
         enable = true;
 
-        storePaths = [ pkgs.nbd ];
+        storePaths = [ pkgs.nbd pkgs.util-linux ];
         initrdBin = [
           (pkgs.runCommand "nfs-utils-sbin" { } ''
             mkdir -p "$out"
