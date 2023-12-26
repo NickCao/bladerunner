@@ -162,6 +162,11 @@ in
         "upperdir=/sysroot/${scratch}/upperdir"
         "workdir=/sysroot/${scratch}/workdir"
       ];
+      depends = [
+        "/sysroot/${rostore}"
+        "/sysroot/${scratch}/upperdir"
+        "/sysroot/${scratch}/workdir"
+      ];
     };
 
     system.build.ukiconf = (pkgs.formats.ini { }).generate "uki.conf" {
