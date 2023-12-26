@@ -4,7 +4,7 @@ let
   kernelTarget = pkgs.stdenv.hostPlatform.linux-kernel.target;
   rostore = "/mnt/store";
   scratch = "/mnt/scratch";
-  scratchDev = "nbd1";
+  scratchDev = "nbd0";
   cfg = config.bladerunner;
 in
 {
@@ -78,6 +78,22 @@ in
             RemainAfterExit = true;
             ExecStart = "${lib.getBin pkgs.nbd}/bin/nbd-client %i";
             ExecStop = "${lib.getBin pkgs.nbd}/nbd-client -d /dev/%i";
+          };
+        };
+
+        services.wipefs-scratch = {
+          wantedBy = [ "sysroot-mnt-scratch.mount" ];
+          before = [ "sysroot-mnt-scratch.mount" ];
+          requires = [ "dev-${scratchDev}.device" ];
+          after = [ "dev-${scratchDev}.device" ];
+          unitConfig = {
+            DefaultDependencies = false;
+          };
+          serviceConfig = {
+            Type = "oneshot";
+            ExecStart = [
+              "${pkgs.util-linux}/bin/wipefs --all --force /dev/${scratchDev}"
+            ];
           };
         };
 
