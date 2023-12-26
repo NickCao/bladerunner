@@ -98,8 +98,8 @@ in
         };
 
         services.mkdir-rw-store = {
-          wantedBy = [ "sysroot-nix-store.mount" ];
-          before = [ "sysroot-nix-store.mount" ];
+          wantedBy = [ "sysroot-nix.mount" ];
+          before = [ "sysroot-nix.mount" ];
           unitConfig = {
             IgnoreOnIsolate = true;
             DefaultDependencies = false;
