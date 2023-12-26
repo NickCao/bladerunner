@@ -161,11 +161,8 @@ in
         "lowerdir=/sysroot/${rostore}"
         "upperdir=/sysroot/${scratch}/upperdir"
         "workdir=/sysroot/${scratch}/workdir"
-      ];
-      depends = [
-        "/sysroot/${rostore}"
-        "/sysroot/${scratch}/upperdir"
-        "/sysroot/${scratch}/workdir"
+        "x-systemd.requires=/sysroot/${scratch}"
+        "x-systemd.requires=/sysroot/${rostore}"
       ];
     };
 
