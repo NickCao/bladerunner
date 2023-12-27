@@ -128,12 +128,6 @@ in
 
     networking.useNetworkd = true;
 
-    system.build.rootblk = pkgs.callPackage (modulesPath + "/../lib/make-squashfs.nix") {
-      # FIXME: before prod, drop this line to use the default compression algo xz
-      comp = "zstd -Xcompression-level 6";
-      storeContents = [ build.toplevel ];
-    };
-
     fileSystems."/" = {
       fsType = "tmpfs";
       options = [ "defaults" "mode=755" ];

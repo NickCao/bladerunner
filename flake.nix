@@ -8,9 +8,9 @@
       # nix build .#hydraJobs.netboot
       # creates a tftp root directory for pxe boot
       # chain ipxe.efi from pxe
-      inherit (self.nixosConfigurations.netboot.config.system.build) netboot rootblk toplevel;
+      inherit (self.nixosConfigurations.netboot.config.system.build) netboot toplevel;
       # nix run .#hydraJobs.nbd-server
-      # exports a readonly nix store and a ephemeral scratch disk
+      # exports a ephemeral scratch disk
       # FIXME: change listenaddr and port
       nbd-server = with self.nixosConfigurations.netboot.pkgs; writeShellScriptBin "nbd-server" ''
         ${nbd}/bin/nbd-server --nodaemon -C ${writeText "config" ''
