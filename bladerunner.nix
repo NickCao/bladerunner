@@ -59,6 +59,7 @@ in
 
         targets.network-online.requiredBy = [ "initrd.target" ];
         services.systemd-networkd-wait-online.requiredBy = [ "network-online.target" ];
+        network.wait-online.extraArgs = [ "--ipv4" ];
 
         contents."/etc/nbdtab".text = ''
           ${scratchDev} ${cfg.addr} scratch port=${toString cfg.port}
