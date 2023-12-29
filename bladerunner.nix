@@ -145,7 +145,7 @@ in
     fileSystems."${rostore}" = {
       fsType = "nfs";
       device = "172.24.5.3:/var/storage/biyun/nixstore/nix";
-      # options = [ ];
+      options = [ "noatime" "noacl" "nodiratime" "nolock" "vers=4.1" ]; # server side is using v4.1
       neededForBoot = true;
     };
 
