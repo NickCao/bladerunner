@@ -82,6 +82,13 @@
             };
 
             services.openssh.enable = true;
+            # FIXME: replace this into remote cache
+            programs.ssh.extraConfig = ''
+              StrictHostKeyChecking accept-new
+              Host example
+                  Hostname example.com
+                  Port 22
+            '';
 
             users.users.root.openssh.authorizedKeys.keys = with pkgs.lib; let
               splitKey = f: splitString "\n" (readFile f);
