@@ -135,7 +135,7 @@ in
     };
 
     fileSystems."${scratch}" = {
-      fsType = "ext4";
+      fsType = "btrfs";
       device = "/dev/${scratchDev}";
       options = [ "_netdev" "x-systemd.requires=nbd@${scratchDev}.service" ];
       autoFormat = true;
