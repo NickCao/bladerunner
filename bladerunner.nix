@@ -84,7 +84,7 @@ in
 
         services.wipefs-scratch = {
           wantedBy = [ "sysroot-mnt-scratch.mount" ];
-          before = [ "sysroot-mnt-scratch.mount" ];
+          before = [ "systemd-makefs@dev-nbd0.service" ];
           requires = [ "dev-${scratchDev}.device" ];
           after = [ "dev-${scratchDev}.device" ];
           unitConfig = {
