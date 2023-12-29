@@ -2,8 +2,22 @@
   inputs = {
     # required for the proper operation of nbd-client and nixos/github-runner
     nixpkgs.url = "github:Avimitin/nixpkgs/bladerunner";
+
+    # ssh keys, for debugging usage. Run nix flake update to update them
+    sequencer = {
+      url = "https://github.com/sequencer.keys";
+      flake = false;
+    };
+    avimitin = {
+      url = "https://github.com/Avimitin.keys";
+      flake = false;
+    };
+    nickcao = {
+      url = "https://github.com/NickCao.keys";
+      flake = false;
+    };
   };
-  outputs = { self, nixpkgs, ... }: {
+  outputs = { self, nixpkgs, sequencer, avimitin, nickcao, ... }: {
     hydraJobs = rec {
       # nix build .#hydraJobs.netboot
       # creates a tftp root directory for pxe boot
@@ -38,58 +52,64 @@
         install -D /dev/null                           "$out/etc/os-release"
       '';
     };
-    nixosConfigurations.netboot = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
-      modules = [
-        ./bladerunner.nix
-        {
+    nixosConfigurations.netboot =
+      let
+        pkgs = self.nixosConfigurations.netboot.pkgs;
+      in
+      nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          ./bladerunner.nix
+          {
 
-          bladerunner = {
-            enable = true;
-            addr = "172.24.5.1";
-            port = 10809;
-          };
-
-          services.github-runners.sequencer = {
-            enable = true;
-            # FIXME: use actual repo url and github token
-            url = "https://github.com/NickCao/bladerunner";
-            tokenFile = "/nix/gh-runner.token";
-            name = "sequencer";
-            replace = true;
-            ephemeral = true;
-            extraPackages = with self.nixosConfigurations.netboot.pkgs; [
-              python3
-            ];
-          };
-
-          services.openssh.enable = true;
-
-          users.users.root.openssh.authorizedKeys.keys = [
-          ];
-
-          nix.settings = {
-            experimental-features = [ "nix-command" "flakes" ];
-            post-build-hook = with self.nixosConfiguration.netboot.pkgs; writeShellApplication {
-              name = "upload-to-cache";
-              runtimeInputs = [ ];
-              text = ''
-                set -eu
-                set -f # disable globbing
-                export IFS=' '
-
-                echo "Post-build hook invoked at $USER ($(whoami))" | tee -a /tmp/nix-post-build-hook.log
-
-                echo "Uploading paths" $OUT_PATHS | tee -a /tmp/nix-post-build-hook.log
-                # FIXME: replace ssh host
-                nix copy --to "ssh-ng://example-nix-cache" $OUT_PATHS 2>&1 | tee -a /tmp/nix-post-build-hook.log
-              '';
+            bladerunner = {
+              enable = true;
+              addr = "172.24.5.1";
+              port = 10809;
             };
-          };
 
-          system.stateVersion = "23.11";
-        }
-      ];
-    };
+            services.github-runners.sequencer = {
+              enable = true;
+              # FIXME: use actual repo url and github token
+              url = "https://github.com/NickCao/bladerunner";
+              tokenFile = "/nix/gh-runner.token";
+              name = "sequencer";
+              replace = true;
+              ephemeral = true;
+              extraPackages = with pkgs; [
+                python3
+              ];
+            };
+
+            services.openssh.enable = true;
+
+            users.users.root.openssh.authorizedKeys.keys = with pkgs.lib; let
+              splitKey = f: splitString "\n" (readFile f);
+            in
+            splitKey sequencer ++ splitKey avimitin ++ splitKey nickcao ++ [ ];
+
+            nix.settings = {
+              experimental-features = [ "nix-command" "flakes" ];
+              post-build-hook = with pkgs; writeShellApplication {
+                name = "upload-to-cache";
+                runtimeInputs = [ ];
+                text = ''
+                  set -eu
+                  set -f # disable globbing
+                  export IFS=' '
+
+                  echo "Post-build hook invoked at $USER ($(whoami))" | tee -a /tmp/nix-post-build-hook.log
+
+                  echo "Uploading paths" $OUT_PATHS | tee -a /tmp/nix-post-build-hook.log
+                  # FIXME: replace ssh host
+                  nix copy --to "ssh-ng://example-nix-cache" $OUT_PATHS 2>&1 | tee -a /tmp/nix-post-build-hook.log
+                '';
+              };
+            };
+
+            system.stateVersion = "23.11";
+          }
+        ];
+      };
   };
 }

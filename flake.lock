@@ -1,16 +1,40 @@
 {
   "nodes": {
+    "avimitin": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-dIFtCDs+xaxw1kxLcVNgSVlR7V7uiiuLnfGOWyEBP0I=",
+        "type": "file",
+        "url": "https://github.com/Avimitin.keys"
+      },
+      "original": {
+        "type": "file",
+        "url": "https://github.com/Avimitin.keys"
+      }
+    },
+    "nickcao": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-czliOUXOsTa0rSYzAbiJ2nNo2UxsVXOMWu3NO/fERlM=",
+        "type": "file",
+        "url": "https://github.com/NickCao.keys"
+      },
+      "original": {
+        "type": "file",
+        "url": "https://github.com/NickCao.keys"
+      }
+    },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1703566707,
-        "narHash": "sha256-WYddz/ECEsjkZfkxt1wI2CmqV+K5Y75DYnoz5cggdAM=",
-        "owner": "NickCao",
+        "lastModified": 1703770557,
+        "narHash": "sha256-oJBJn/C27AWV9cJeUETvrtClaIxNBH7tqk7PZ/d5uUs=",
+        "owner": "Avimitin",
         "repo": "nixpkgs",
-        "rev": "f217c21ed54fc67808a55881f2270f51bfeb3312",
+        "rev": "da9241cbd9249f2add6dfda647d4099830fe743c",
         "type": "github"
       },
       "original": {
-        "owner": "NickCao",
+        "owner": "Avimitin",
         "ref": "bladerunner",
         "repo": "nixpkgs",
         "type": "github"
@@ -18,7 +42,22 @@
     },
     "root": {
       "inputs": {
-        "nixpkgs": "nixpkgs"
+        "avimitin": "avimitin",
+        "nickcao": "nickcao",
+        "nixpkgs": "nixpkgs",
+        "sequencer": "sequencer"
+      }
+    },
+    "sequencer": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-rn1YwqW78bj0lrW70XQK8knwTLd1xDdv3M2VOjybS78=",
+        "type": "file",
+        "url": "https://github.com/sequencer.keys"
+      },
+      "original": {
+        "type": "file",
+        "url": "https://github.com/sequencer.keys"
       }
     }
   },
