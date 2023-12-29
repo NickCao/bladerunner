@@ -68,6 +68,25 @@
           users.users.root.openssh.authorizedKeys.keys = [
           ];
 
+          nix.settings = {
+            experimental-features = [ "nix-command" "flakes" ];
+            post-build-hook = with self.nixosConfiguration.netboot.pkgs; writeShellApplication {
+              name = "upload-to-cache";
+              runtimeInputs = [ ];
+              text = ''
+                set -eu
+                set -f # disable globbing
+                export IFS=' '
+
+                echo "Post-build hook invoked at $USER ($(whoami))" | tee -a /tmp/nix-post-build-hook.log
+
+                echo "Uploading paths" $OUT_PATHS | tee -a /tmp/nix-post-build-hook.log
+                # FIXME: replace ssh host
+                nix copy --to "ssh-ng://example-nix-cache" $OUT_PATHS 2>&1 | tee -a /tmp/nix-post-build-hook.log
+              '';
+            };
+          };
+
           system.stateVersion = "23.11";
         }
       ];
