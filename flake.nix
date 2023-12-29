@@ -103,13 +103,13 @@
                 text = ''
                   set -eu
                   set -f # disable globbing
-                  export IFS=' '
 
                   echo "Post-build hook invoked at $USER ($(whoami))" | tee -a /tmp/nix-post-build-hook.log
 
-                  echo "Uploading paths" $OUT_PATHS | tee -a /tmp/nix-post-build-hook.log
+                  echo "Uploading paths" "$OUT_PATHS" | tee -a /tmp/nix-post-build-hook.log
+                  IFS=' ' read -r -a outPathArray <<< "$OUT_PATHS"
                   # FIXME: replace ssh host
-                  nix copy --to "ssh-ng://example-nix-cache" $OUT_PATHS 2>&1 | tee -a /tmp/nix-post-build-hook.log
+                  nix copy --to "ssh-ng://example-nix-cache" "''${outPathArray[*]}" 2>&1 | tee -a /tmp/nix-post-build-hook.log
                 '';
               };
             };
