@@ -2,7 +2,7 @@
 let
   build = config.system.build;
   kernelTarget = pkgs.stdenv.hostPlatform.linux-kernel.target;
-  rostore = "/mnt/store";
+  rostore = "/mnt/nix";
   scratch = "/mnt/scratch";
   scratchDev = "nbd0";
   cfg = config.bladerunner;
