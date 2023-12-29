@@ -54,9 +54,13 @@
             enable = true;
             # FIXME: use actual repo url and github token
             url = "https://github.com/NickCao/bladerunner";
-            tokenFile = "/gh-runner.token";
+            tokenFile = "/nix/gh-runner.token";
             name = "sequencer";
+            replace = true;
             ephemeral = true;
+            extraPackages = with self.nixosConfigurations.netboot.pkgs; [
+              python3
+            ];
           };
 
           services.openssh.enable = true;
