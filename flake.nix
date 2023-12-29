@@ -78,6 +78,10 @@
               ephemeral = true;
               extraPackages = with pkgs; [
                 python3
+                jq
+                findutils
+                git
+                gnutar
               ];
             };
 
