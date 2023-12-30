@@ -117,7 +117,8 @@
             services.openssh.enable = true;
             # FIXME: replace this into remote cache
             programs.ssh.extraConfig = ''
-              StrictHostKeyChecking accept-new
+              StrictHostKeyChecking no
+              UserKnownHostsFile /dev/null
               Host example
                   Hostname example.com
                   Port 22
