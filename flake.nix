@@ -84,6 +84,35 @@
                 gnutar
               ];
             };
+            systemd.services."restore-nix-nfs-db@" =
+              let
+                script = pkgs.writeScript "restore-nix-nfs-db" ''
+                  set -ex
+                  export PATH="/run/current-system/sw/bin:$PATH"
+                  db_file=$(mktemp)
+                  nix-store --dump-db --store ssh-ng://simisear > $db_file
+                  nix-store --load-db < $db_file
+                  rm $db_file
+                '';
+              in
+              {
+                serviceConfig = {
+                  Type = "oneshot";
+                  ExecStart = [ "/run/current-system/sw/bin/bash ${script}" ];
+                  Restart = "on-failure";
+                  RestartSec = "10s";
+                  StandardOutput = "socket";
+                  StandardError = "socket";
+                };
+              };
+            systemd.sockets.restore-nix-nfs-db = {
+              before = [ "github-runner-sequencer.service" ];
+              socketConfig = {
+                ListenStream = "11451";
+                Accept = true;
+              };
+              wantedBy = [ "sockets.target" ];
+            };
 
             services.openssh.enable = true;
             # FIXME: replace this into remote cache
