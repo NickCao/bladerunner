@@ -105,6 +105,8 @@ func chan_handler(chr ssh.NewChannel) {
 			return
 		}
 
+		go command.Wait()
+
 		if request.WantReply {
 			request.Reply(true, nil)
 		}
